@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Dataset (too large for GitHub)
+datasets/
+traffic_sign_data/
+yolo_dataset/
+*.pkl
+*.npz
+
+# External repositories
+EnlightenGAN/
+
+# Model weights and training outputs
+runs/
+*.pt
+*.pth
+*.onnx
+*.torchscript
+weights/
+model_ckpt/
+trained_model_path.txt
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Cache files
+*.cache
+.cache/
+
+# Large data files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Test outputs
+test_output/
+output/
+results/
+visualizations/
+
