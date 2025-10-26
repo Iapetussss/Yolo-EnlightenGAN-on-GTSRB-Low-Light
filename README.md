@@ -7,6 +7,18 @@
 
 A robust traffic sign detection system that leverages **EnlightenGAN** for low-light image enhancement combined with **YOLOv8** for real-time object detection on the **GTSRB dataset**.
 
+## 🎯 Training Results
+
+**Model Performance** (YOLOv8n, 20 epochs, 11.79 hours):
+- ✅ **mAP@0.5**: 98.65%
+- ✅ **Precision**: 97.85%
+- ✅ **Recall**: 96.60%
+- ✅ **mAP@0.5:0.95**: 94.46%
+
+📊 **[View Detailed Training Results](results/TRAINING_RESULTS.md)**
+
+![Training Curves](results/training/results.png)
+
 ## 🌟 Features
 
 - 🌙 **Low-Light Enhancement**: EnlightenGAN-based illumination improvement

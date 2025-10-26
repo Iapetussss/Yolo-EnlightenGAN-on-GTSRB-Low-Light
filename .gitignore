@@ -57,6 +57,10 @@ weights/
 model_ckpt/
 trained_model_path.txt
 
+# But keep results folder for showcase
+!results/
+!results/**
+
 # Logs
 *.log
 logs/
