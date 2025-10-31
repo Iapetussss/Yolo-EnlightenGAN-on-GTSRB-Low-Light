@@ -86,3 +86,8 @@ output/
 results/
 visualizations/
 
+# Experiment results (too many files)
+experiments/
+traditional_enhanced_yolo_dataset/
+backup_before_migration/
+
