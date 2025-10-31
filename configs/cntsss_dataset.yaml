@@ -1,0 +1,27 @@
+# CNTSSS Dataset Configuration
+# Chinese Nighttime Traffic Sign Sample Set
+# 中文夜间交通标志样本集
+
+# Path to dataset
+path: data/cntsss  # 下载后修改为实际路径
+
+# Paths relative to 'path'
+train: images/train
+val: images/val
+test: images/test
+
+# Number of classes
+nc: 3
+
+# Class names (3 broad categories)
+names:
+  0: prohibitory    # 禁止类 (红色圆形)
+  1: mandatory      # 强制类 (蓝色圆形)
+  2: warning        # 警告类 (黄色三角形)
+
+# Dataset info
+# From: https://github.com/linzy88/YOLO-LLTS
+# Paper: YOLO-LLTS: Real-Time Low-Light Traffic Sign Detection
+# Categories: 3 broad categories (not 43 fine-grained classes like GTSRB)
+
+
