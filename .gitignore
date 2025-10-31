@@ -41,6 +41,7 @@ env/
 datasets/
 traffic_sign_data/
 yolo_dataset/
+traffic_sign_data_enhanced/
 *.pkl
 *.npz
 
@@ -92,4 +93,6 @@ traditional_enhanced_yolo_dataset/
 backup_before_migration/
 
 #data
-archive/
+GTSRB/
+new_GTSRB/
+traffic_sign_data/
