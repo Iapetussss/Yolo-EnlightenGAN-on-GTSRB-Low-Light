@@ -30,8 +30,38 @@ if not INPUT_DIR.exists():
     print("请确保traffic_sign_data/low_light目录下有images和labels文件夹")
     sys.exit(1)
 
-# 创建输出目录
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+# 创建输出目录，如果存在则尝试清空
+if OUTPUT_DIR.exists():
+    print(f"⚠️  输出目录已存在: {OUTPUT_DIR}")
+    try:
+        print("正在清空原有内容...")
+        # 先尝试安全删除所有文件和子目录
+        for item in OUTPUT_DIR.iterdir():
+            if item.is_file():
+                try:
+                    item.unlink()
+                except Exception as e:
+                    print(f"⚠️  无法删除文件 {item}: {e}")
+            elif item.is_dir():
+                try:
+                    shutil.rmtree(item)
+                except Exception as e:
+                    print(f"⚠️  无法删除目录 {item}: {e}")
+        print("✅ 成功清空输出目录")
+    except Exception as e:
+        print(f"⚠️  清空目录时出错: {e}")
+        print("ℹ️  将使用现有的输出目录结构")
+        # 确保必要的子目录存在
+        for split in ['train', 'val', 'test']:
+            (OUTPUT_DIR / 'images' / split).mkdir(parents=True, exist_ok=True)
+            (OUTPUT_DIR / 'labels' / split).mkdir(parents=True, exist_ok=True)
+else:
+    # 如果目录不存在，创建完整的目录结构
+    for split in ['train', 'val', 'test']:
+        (OUTPUT_DIR / 'images' / split).mkdir(parents=True, exist_ok=True)
+        (OUTPUT_DIR / 'labels' / split).mkdir(parents=True, exist_ok=True)
+
+print(f"✅ 输出目录准备完成: {OUTPUT_DIR}")
 
 # 创建输出目录结构
 for split in ['train', 'val', 'test']:
@@ -45,17 +75,20 @@ print(f"输出路径: {OUTPUT_DIR}")
 def choose_enhancement_method():
     """选择图像增强方法"""
     print("\n" + "=" * 60)
-    print("选择增强方法:")
+    print("选择增强方法 (已优化参数防止图像失真):")
     print("=" * 60)
     print("1. 使用EnlightenGAN增强 (需要下载模型)")
     print("2. 使用传统方法增强 (CLAHE + Gamma校正，无需额外模型)")
+    print("3. 自动选择 (如果EnlightenGAN可用则使用，否则使用传统方法)")
     
-    choice = input("\n请选择 [1/2]: ").strip()
+    choice = input("\n请选择 [1/2/3]: ").strip()
+    
+    # 检查EnlightenGAN模型是否存在
+    model_path = Path("weights/enlightengan.onnx")
+    enlightengan_available = model_path.exists()
     
     if choice == '1':
-        # 检查EnlightenGAN模型
-        model_path = Path("weights/enlightengan.onnx")
-        if not model_path.exists():
+        if not enlightengan_available:
             print("\n❌ 未找到EnlightenGAN模型")
             print("正在创建下载模型的脚本...")
             create_download_script()
@@ -63,6 +96,14 @@ def choose_enhancement_method():
             print("\n将自动使用传统方法增强...")
             return "traditional"
         return "enlightengan"
+    elif choice == '3':
+        # 自动选择
+        if enlightengan_available:
+            print("\n✅ 检测到EnlightenGAN模型，将使用EnlightenGAN增强")
+            return "enlightengan"
+        else:
+            print("\nℹ️  未检测到EnlightenGAN模型，将使用传统方法增强")
+            return "traditional"
     else:
         return "traditional"
 
@@ -131,13 +172,25 @@ def traditional_enhancement(image):
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
     
-    # 应用CLAHE到L通道
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    # 应用CLAHE到L通道 - 降低clipLimit防止过度增强
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     l_clahe = clahe.apply(l)
     
-    # Gamma校正
-    gamma = 1.2
+    # 降低Gamma值，减少过度增亮
+    gamma = 1.1
     l_gamma = np.array(255 * (l_clahe / 255) ** (1 / gamma), dtype='uint8')
+    
+    # 添加亮度限制，确保不会过度增亮
+    # 计算原始图像的平均亮度
+    orig_mean_brightness = np.mean(l)
+    # 设置目标亮度为原始亮度的1.5倍，但不超过200
+    target_brightness = min(orig_mean_brightness * 1.5, 200)
+    
+    # 根据目标亮度调整增强后的L通道
+    current_mean = np.mean(l_gamma)
+    if current_mean > 0:
+        factor = target_brightness / current_mean
+        l_gamma = np.clip(l_gamma * factor, 0, 255).astype('uint8')
     
     # 合并通道
     enhanced_lab = cv2.merge([l_gamma, a, b])
@@ -146,7 +199,7 @@ def traditional_enhancement(image):
     return enhanced
 
 def enhance_with_enlightengan(image):
-    """使用EnlightenGAN增强图像"""
+    """使用EnlightenGAN增强图像，添加亮度限制防止过度增强"""
     # 这里需要实现EnlightenGAN的推理代码
     # 由于模型可能不存在，我们先尝试导入，如果失败则使用传统方法
     try:
@@ -170,6 +223,34 @@ def enhance_with_enlightengan(image):
         enhanced = outputs[0][0]
         enhanced = np.transpose(enhanced, (1, 2, 0))
         enhanced = (enhanced * 255.0).astype(np.uint8)
+        
+        # 添加亮度限制处理，防止图像失真
+        # 转换到LAB色彩空间进行亮度调整
+        lab = cv2.cvtColor(enhanced, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        
+        # 计算原始图像的平均亮度
+        orig_lab = cv2.cvtColor(cv2.resize(image, (256, 256)), cv2.COLOR_BGR2LAB)
+        orig_mean_brightness = np.mean(orig_lab[:, :, 0])
+        
+        # 设置目标亮度为原始亮度的1.6倍，但不超过220
+        target_brightness = min(orig_mean_brightness * 1.6, 220)
+        
+        # 根据目标亮度调整L通道
+        current_mean = np.mean(l)
+        if current_mean > 0:
+            # 计算调整因子，但限制在合理范围内
+            factor = min(target_brightness / current_mean, 1.8)  # 最大增加80%
+            l = np.clip(l * factor, 0, 255).astype('uint8')
+        
+        # 降低对比度，避免过度增强导致的失真
+        # l = cv2.addWeighted(l, 0.95, np.ones_like(l)*128, 0.05, 0)
+        
+        # 合并通道并转回BGR
+        enhanced_lab = cv2.merge([l, a, b])
+        enhanced = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
+        
+        # 调整回原始尺寸
         enhanced = cv2.resize(enhanced, (image.shape[1], image.shape[0]))
         
         return enhanced
