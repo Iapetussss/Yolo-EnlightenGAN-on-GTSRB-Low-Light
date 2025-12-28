@@ -1,0 +1,16 @@
+# CNTSSS 夜间场景数据集配置
+# Chinese Night-Time Scene Semantic Segmentation Dataset
+
+path: D:/rgznzuoye/new/data/CNTSSS  # 数据集根目录
+train: train/images  # 训练集
+val: test/images     # 验证集（使用测试集作为验证）
+test: test/images    # 测试集
+
+# 类别数量
+nc: 3
+
+# 类别名称（交通标志的3大类）
+names:
+  0: prohibitory   # 禁止类标志（如禁止停车、限速等）
+  1: mandatory     # 指令类标志（如直行、左转等）
+  2: warning       # 警告类标志（如注意行人、施工等）

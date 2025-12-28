@@ -1,0 +1,16 @@
+# CNTSSS 轻度EnlightenGAN增强后的数据集配置
+# 混合比例: 70% EnlightenGAN + 30% 原图
+
+path: D:/rgznzuoye/new/data/CNTSSS_enlightengan_mild  # 数据集根目录
+train: train/images  # 训练集
+val: test/images     # 验证集
+test: test/images    # 测试集
+
+# 类别数量
+nc: 3
+
+# 类别名称（交通标志的3大类）
+names:
+  0: prohibitory   # 禁止类标志
+  1: mandatory     # 指令类标志
+  2: warning       # 警告类标志
