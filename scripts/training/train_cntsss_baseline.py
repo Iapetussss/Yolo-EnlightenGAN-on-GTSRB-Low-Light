@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-实验2：传统方法 + YOLOv8 训练
-使用传统方法（Multi-Scale Retinex + CLAHE + Gamma）增强后的图像训练
+CNTSSS Baseline: 真实夜间场景直接训练
 """
 
 import sys
 from pathlib import Path
 
-# 添加项目根目录到路径
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
@@ -18,36 +16,29 @@ from datetime import datetime
 
 def main():
     print("="*70)
-    print("  实验 2: 传统方法 + YOLOv8 训练")
+    print("  CNTSSS Baseline: 真实夜间场景训练")
     print("="*70)
     
-    # 配置路径
-    data_yaml = project_root / "configs" / "traditional_dataset.yaml"
+    # 配置
+    data_yaml = project_root / "configs" / "cntsss_dataset.yaml"
     model_path = project_root / "models" / "yolov8" / "yolov8n.pt"
-    output_base = project_root / "experiments" / "exp2_traditional"
-
-    # 检查配置文件
+    output_base = project_root / "experiments" / "cntsss_baseline"
+    
     if not data_yaml.exists():
         print(f"\n❌ 配置文件不存在: {data_yaml}")
-        print(f"   请先运行: python batch_enhance_traditional.py")
         return
     
-    # 检查模型
-    if not model_path.exists():
-        print(f"\n❌ 模型文件不存在: {model_path}")
-        print(f"   YOLO 会自动下载...")
-    
     print(f"\n📋 实验配置:")
-    print(f"  模型: YOLOv8n")
-    print(f"  数据: 传统方法增强后的图像")
-    print(f"  方法: Multi-Scale Retinex + CLAHE + Gamma")
+    print(f"  数据集: CNTSSS (真实夜间场景)")
+    print(f"  训练集: 3276 张")
+    print(f"  测试集: 786 张")
+    print(f"  类别: 3 类")
     print(f"  配置: {data_yaml}")
-    print(f"  输出: {output_base}")
     
-    # 训练参数（与 baseline 一致）
+    # 训练参数
     print(f"\n⚙️  训练参数:")
-    epochs = 20
-    batch = 16  # 与 baseline 保持一致
+    epochs = 50  # 数据量小，多训练几轮
+    batch = 16   # 数据量小，可以用大 batch
     imgsz = 640
     device = 0
     
@@ -56,28 +47,23 @@ def main():
     print(f"  Image size: {imgsz}")
     print(f"  Device: GPU {device}")
     
-    # 确认
-    print(f"\n⏱️  预计训练时间: 10-13 小时")
+    print(f"\n⏱️  预计训练时间: 2-3 小时")
     response = input(f"\n开始训练？[y/n]: ").strip().lower()
     
     if response != 'y':
         print("❌ 训练已取消")
         return
     
-    # 创建输出目录
     output_base.mkdir(parents=True, exist_ok=True)
-    
-    # 记录开始时间
     start_time = datetime.now()
+    
     print(f"\n{'='*70}")
     print(f"  训练开始: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"{'='*70}\n")
     
     try:
-        # 加载模型
         model = YOLO(str(model_path))
         
-        # 训练
         results = model.train(
             data=str(data_yaml),
             epochs=epochs,
@@ -90,11 +76,10 @@ def main():
             patience=50,
             save=True,
             plots=True,
-            workers=2,
+            workers=4,
             amp=False
         )
         
-        # 计算训练时间
         end_time = datetime.now()
         duration = end_time - start_time
         
@@ -110,24 +95,26 @@ def main():
             final_precision = last_row['metrics/precision(B)']
             final_recall = last_row['metrics/recall(B)']
         else:
-            final_map50 = 0
-            final_map = 0
-            final_precision = 0
-            final_recall = 0
+            final_map50 = final_map = final_precision = final_recall = 0
         
         # 保存实验信息
         experiment_info = {
-            'experiment_name': '传统方法 + YOLOv8',
+            'experiment_name': 'CNTSSS Baseline',
+            'dataset': 'CNTSSS (Real night-time scenes)',
             'model': 'YOLOv8n',
-            'enhancement_method': 'Multi-Scale Retinex + CLAHE + Gamma',
-            'data_source': 'Traditional enhanced images',
+            'data_type': 'Original night-time images (no enhancement)',
             'training_params': {
                 'epochs': epochs,
                 'batch_size': batch,
                 'image_size': imgsz,
                 'device': f'cuda:{device}',
-                'workers': 2,
+                'workers': 4,
                 'amp': False
+            },
+            'dataset_stats': {
+                'train_images': 3276,
+                'test_images': 786,
+                'num_classes': 3
             },
             'training_time': str(duration),
             'final_metrics': {
@@ -146,29 +133,27 @@ def main():
         
         # 打印结果
         print(f"\n{'='*70}")
-        print(f"                          ✅ 实验 2 训练完成！")
+        print(f"  ✅ CNTSSS Baseline 训练完成！")
         print(f"{'='*70}\n")
         print(f"训练时间: {duration}\n")
-        print(f"结果保存在:")
-        print(f"  {output_base / 'run'}/\n")
+        print(f"结果保存在: {output_base / 'run'}/\n")
         print(f"关键指标:")
-        print(f"  mAP@0.5:      {final_map50:.4f}")
-        print(f"  mAP@0.5:0.95: {final_map:.4f}")
-        print(f"  Precision:    {final_precision:.4f}")
-        print(f"  Recall:       {final_recall:.4f}\n")
+        print(f"  mAP@0.5:      {final_map50:.4f} ({final_map50*100:.1f}%)")
+        print(f"  mAP@0.5:0.95: {final_map:.4f} ({final_map*100:.1f}%)")
+        print(f"  Precision:    {final_precision:.4f} ({final_precision*100:.1f}%)")
+        print(f"  Recall:       {final_recall:.4f} ({final_recall*100:.1f}%)\n")
         print(f"实验信息已保存: {info_path}\n")
-        
         print(f"{'='*70}")
-        print(f"三组实验对比")
+        print(f"下一步：运行增强实验进行对比")
         print(f"{'='*70}\n")
-        print(f"1. Baseline (纯低光照):     mAP = 70.4%")
-        print(f"2. 传统方法增强:            mAP = {final_map50*100:.1f}%")
-        print(f"3. EnlightenGAN增强:        mAP = 39.7%")
-        print(f"\n{'='*70}\n")
+        print("1. 批量增强数据:")
+        print("   python batch_enhance_cntsss.py\n")
+        print("2. 训练增强模型:")
+        print("   python scripts/training/train_cntsss_enhanced.py")
+        print()
         
     except KeyboardInterrupt:
         print(f"\n\n⚠️  训练被用户中断")
-        print(f"部分结果可能已保存在: {output_base}")
     except Exception as e:
         print(f"\n❌ 训练失败: {e}")
         import traceback
@@ -176,3 +161,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

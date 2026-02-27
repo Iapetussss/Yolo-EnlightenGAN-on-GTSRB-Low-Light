@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-实验2：传统方法 + YOLOv8 训练
-使用传统方法（Multi-Scale Retinex + CLAHE + Gamma）增强后的图像训练
+实验4：温和增强 + YOLOv8 训练
+使用温和参数（Gamma 1.15 + CLAHE 1.5）增强后的图像训练
 """
 
 import sys
@@ -18,18 +18,19 @@ from datetime import datetime
 
 def main():
     print("="*70)
-    print("  实验 2: 传统方法 + YOLOv8 训练")
+    print("  实验 4: 温和增强 + YOLOv8 训练")
     print("="*70)
     
     # 配置路径
-    data_yaml = project_root / "configs" / "traditional_dataset.yaml"
+    data_yaml = project_root / "configs" / "mild_dataset.yaml"
     model_path = project_root / "models" / "yolov8" / "yolov8n.pt"
-    output_base = project_root / "experiments" / "exp2_traditional"
-
+    output_base = project_root / "experiments" / "exp4_mild"
+    
     # 检查配置文件
     if not data_yaml.exists():
         print(f"\n❌ 配置文件不存在: {data_yaml}")
-        print(f"   请先运行: python batch_enhance_traditional.py")
+        print(f"   请先运行: python batch_enhance_adjustable.py")
+        print(f"   并选择 [1] 温和增强")
         return
     
     # 检查模型
@@ -39,8 +40,8 @@ def main():
     
     print(f"\n📋 实验配置:")
     print(f"  模型: YOLOv8n")
-    print(f"  数据: 传统方法增强后的图像")
-    print(f"  方法: Multi-Scale Retinex + CLAHE + Gamma")
+    print(f"  数据: 温和增强后的图像")
+    print(f"  方法: Gamma 1.15 + CLAHE 1.5")
     print(f"  配置: {data_yaml}")
     print(f"  输出: {output_base}")
     
@@ -117,10 +118,10 @@ def main():
         
         # 保存实验信息
         experiment_info = {
-            'experiment_name': '传统方法 + YOLOv8',
+            'experiment_name': '温和增强 + YOLOv8',
             'model': 'YOLOv8n',
-            'enhancement_method': 'Multi-Scale Retinex + CLAHE + Gamma',
-            'data_source': 'Traditional enhanced images',
+            'enhancement_method': 'Mild Enhancement (Gamma 1.15 + CLAHE 1.5)',
+            'data_source': 'Mild enhanced images',
             'training_params': {
                 'epochs': epochs,
                 'batch_size': batch,
@@ -146,7 +147,7 @@ def main():
         
         # 打印结果
         print(f"\n{'='*70}")
-        print(f"                          ✅ 实验 2 训练完成！")
+        print(f"                          ✅ 实验 4 训练完成！")
         print(f"{'='*70}\n")
         print(f"训练时间: {duration}\n")
         print(f"结果保存在:")
@@ -159,11 +160,12 @@ def main():
         print(f"实验信息已保存: {info_path}\n")
         
         print(f"{'='*70}")
-        print(f"三组实验对比")
+        print(f"四组实验对比")
         print(f"{'='*70}\n")
         print(f"1. Baseline (纯低光照):     mAP = 70.4%")
-        print(f"2. 传统方法增强:            mAP = {final_map50*100:.1f}%")
-        print(f"3. EnlightenGAN增强:        mAP = 39.7%")
+        print(f"2. 传统方法增强:            mAP = 70.1%")
+        print(f"3. 温和增强:                mAP = {final_map50*100:.1f}%")
+        print(f"4. EnlightenGAN增强:        mAP = 39.7%")
         print(f"\n{'='*70}\n")
         
     except KeyboardInterrupt:
@@ -176,3 +178,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

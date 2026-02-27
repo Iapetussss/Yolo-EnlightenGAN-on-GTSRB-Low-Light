@@ -1,0 +1,13 @@
+# CNTSSS 温和增强后的数据集配置
+
+path: D:/rgznzuoye/new/data/CNTSSS_mild_enhanced
+train: train/images
+val: test/images
+test: test/images
+
+nc: 3
+
+names:
+  0: traffic_sign
+  1: traffic_light  
+  2: vehicle

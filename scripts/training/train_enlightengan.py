@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-实验2：传统方法 + YOLOv8 训练
-使用传统方法（Multi-Scale Retinex + CLAHE + Gamma）增强后的图像训练
+实验3：EnlightenGAN + YOLOv8 训练
+使用 EnlightenGAN 增强后的图像训练目标检测模型
 """
 
 import sys
@@ -15,21 +15,22 @@ sys.path.insert(0, str(project_root))
 from ultralytics import YOLO
 import yaml
 from datetime import datetime
+import shutil
 
 def main():
     print("="*70)
-    print("  实验 2: 传统方法 + YOLOv8 训练")
+    print("  实验 3: EnlightenGAN + YOLOv8 训练")
     print("="*70)
     
     # 配置路径
-    data_yaml = project_root / "configs" / "traditional_dataset.yaml"
+    data_yaml = project_root / "configs" / "enlightengan_dataset.yaml"
     model_path = project_root / "models" / "yolov8" / "yolov8n.pt"
-    output_base = project_root / "experiments" / "exp2_traditional"
-
+    output_base = project_root / "experiments" / "exp3_enlightengan"
+    
     # 检查配置文件
     if not data_yaml.exists():
         print(f"\n❌ 配置文件不存在: {data_yaml}")
-        print(f"   请先运行: python batch_enhance_traditional.py")
+        print(f"   请先运行: python batch_enhance_enlightengan.py")
         return
     
     # 检查模型
@@ -39,15 +40,14 @@ def main():
     
     print(f"\n📋 实验配置:")
     print(f"  模型: YOLOv8n")
-    print(f"  数据: 传统方法增强后的图像")
-    print(f"  方法: Multi-Scale Retinex + CLAHE + Gamma")
+    print(f"  数据: EnlightenGAN 增强后的图像")
     print(f"  配置: {data_yaml}")
     print(f"  输出: {output_base}")
     
-    # 训练参数（与 baseline 一致）
+    # 训练参数
     print(f"\n⚙️  训练参数:")
-    epochs = 20
-    batch = 16  # 与 baseline 保持一致
+    epochs = 50
+    batch = 16
     imgsz = 640
     device = 0
     
@@ -91,7 +91,7 @@ def main():
             save=True,
             plots=True,
             workers=2,
-            amp=False
+            amp=False  # 禁用混合精度（节省显存）
         )
         
         # 计算训练时间
@@ -117,10 +117,9 @@ def main():
         
         # 保存实验信息
         experiment_info = {
-            'experiment_name': '传统方法 + YOLOv8',
+            'experiment_name': 'EnlightenGAN + YOLOv8',
             'model': 'YOLOv8n',
-            'enhancement_method': 'Multi-Scale Retinex + CLAHE + Gamma',
-            'data_source': 'Traditional enhanced images',
+            'data_source': 'EnlightenGAN enhanced images',
             'training_params': {
                 'epochs': epochs,
                 'batch_size': batch,
@@ -146,7 +145,7 @@ def main():
         
         # 打印结果
         print(f"\n{'='*70}")
-        print(f"                          ✅ 实验 2 训练完成！")
+        print(f"                          ✅ 实验 3 训练完成！")
         print(f"{'='*70}\n")
         print(f"训练时间: {duration}\n")
         print(f"结果保存在:")
@@ -159,12 +158,16 @@ def main():
         print(f"实验信息已保存: {info_path}\n")
         
         print(f"{'='*70}")
-        print(f"三组实验对比")
+        print(f"下一步：对比实验结果")
         print(f"{'='*70}\n")
-        print(f"1. Baseline (纯低光照):     mAP = 70.4%")
-        print(f"2. 传统方法增强:            mAP = {final_map50*100:.1f}%")
-        print(f"3. EnlightenGAN增强:        mAP = 39.7%")
-        print(f"\n{'='*70}\n")
+        print(f"1. 查看训练结果:")
+        print(f"   {output_base / 'run' / 'results.png'}")
+        print(f"   {output_base / 'run' / 'confusion_matrix.png'}\n")
+        print(f"2. 对比 Baseline vs EnlightenGAN:")
+        print(f"   Baseline mAP:      70.4%")
+        print(f"   EnlightenGAN mAP:  {final_map50*100:.1f}%")
+        print(f"   提升:              {(final_map50-0.704)*100:+.1f}%\n")
+        print(f"{'='*70}\n")
         
     except KeyboardInterrupt:
         print(f"\n\n⚠️  训练被用户中断")
@@ -176,3 +179,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
